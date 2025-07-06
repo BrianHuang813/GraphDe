@@ -1,1 +1,1 @@
-# Hackathon_Data-Dashboard
+# GraphDE | Customised on-chain data dashboard
