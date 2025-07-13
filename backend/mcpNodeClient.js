@@ -1,7 +1,6 @@
 // mcpNodeClient.js
 import axios from 'axios';
 
-const NODIT_API_KEY = "";
 
 const mcp_nodeUrls = {
   ethereum: 'https://ethereum-mainnet.nodit.io/',
@@ -27,7 +26,7 @@ let reqId = 0;
  * @param {Array} options.params - array of parameters for the method
  * @returns {Promise<Object>} JSON-RPC response result
  */
-export async function send_node_Request({ type, chain, category, method, params }) {
+export async function send_node_Request({ type, chain, category, method, params, NODIT_API_KEY }) {
   if (type !== 'node') {
     throw new Error(`Unsupported request type: ${type}`);
   }

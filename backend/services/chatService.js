@@ -14,13 +14,14 @@ export async function processChatMessage(message, sessionId) {
     // Step 1: Extract intent and parameters from the message
     const intent = await extractIntent(message);
     // TODO: remove log
-    console.log('intent', intent);
+    console.log('[+] intent\n', intent);
     
     // Step 2: If intent requires blockchain data, fetch it via MCP
     let blockchainData = null;
     if (intent.requiresData) {
       blockchainData = await executeMCPQuery(intent);
     }
+    console.log('[+] data\n', blockchainData);
 
     // Step 3: Generate AI response with context
     const aiResponse = await generateAIResponse(message, intent, blockchainData);

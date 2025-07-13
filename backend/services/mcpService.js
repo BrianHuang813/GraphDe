@@ -22,7 +22,7 @@ export async function getWalletBalance(chain, address) {
       category: 'native',
       method: 'getNativeBalanceByAccount',
       accountAddress: address,
-      NODIT_API_KEY: process.env.NODIT_API_KEY || 'web3'
+      NODIT_API_KEY: process.env.NODIT_API_KEY
     });
 
     return {
@@ -54,7 +54,7 @@ export async function getTokenData(chain, address) {
       category: 'erc20',
       method: 'getTokenBalancesByAccount',
       accountAddress: address,
-      NODIT_API_KEY: process.env.NODIT_API_KEY || 'web3'
+      NODIT_API_KEY: process.env.NODIT_API_KEY
     });
 
     return {
@@ -146,7 +146,8 @@ async function executeCustomQuery(parameters) {
       chain,
       category,
       method,
-      params: params || []
+      params: params || [],
+      NODIT_API_KEY: process.env.NODIT_API_KEY
     });
 
     return {
