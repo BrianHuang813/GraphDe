@@ -1,9 +1,16 @@
-import { send_web3_RpcRequest } from '../mcpWeb3Client.js';
-import { send_node_Request } from '../mcpNodeClient.js';
+// services/mcpService.js
+import { send_web3_RpcRequest } from "../mcpWeb3Client.js";
+import { send_node_Request } from "../mcpNodeClient.js";
 
 const SUPPORTED_CHAINS = [
-  'ethereum', 'arbitrum', 'optimism', 'aptos', 
-  'avalanche', 'base', 'kaia', 'polygon'
+  "ethereum",
+  "arbitrum",
+  "optimism",
+  "aptos",
+  "avalanche",
+  "base",
+  "kaia",
+  "polygon",
 ];
 
 /**
@@ -19,21 +26,20 @@ export async function getWalletBalance(chain, address) {
 
     const response = await send_web3_RpcRequest({
       chain,
-      category: 'native',
-      method: 'getNativeBalanceByAccount',
+      category: "native",
+      method: "getNativeBalanceByAccount",
       accountAddress: address,
-      NODIT_API_KEY: process.env.NODIT_API_KEY
+      NODIT_API_KEY: process.env.NODIT_API_KEY,
     });
 
     return {
       chain,
       address,
       balance: response.result || response,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-
   } catch (error) {
-    console.error('Error fetching wallet balance:', error);
+    console.error("Error fetching wallet balance:", error);
     throw new Error(`Failed to fetch balance for ${address} on ${chain}`);
   }
 }
@@ -51,21 +57,20 @@ export async function getTokenData(chain, address) {
 
     const response = await send_web3_RpcRequest({
       chain,
-      category: 'erc20',
-      method: 'getTokenBalancesByAccount',
+      category: "erc20",
+      method: "getTokenBalancesByAccount",
       accountAddress: address,
-      NODIT_API_KEY: process.env.NODIT_API_KEY
+      NODIT_API_KEY: process.env.NODIT_API_KEY,
     });
 
     return {
       chain,
       address,
       tokens: response.result || response,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-
   } catch (error) {
-    console.error('Error fetching token data:', error);
+    console.error("Error fetching token data:", error);
     throw new Error(`Failed to fetch tokens for ${address} on ${chain}`);
   }
 }
@@ -84,18 +89,25 @@ export async function getTransactionHistory(chain, address, options = {}) {
 
     const { limit = 50, offset = 0 } = options;
 
-    // This would use a more specific MCP method for transaction history
-    // For now, return a placeholder response
+    const response = await send_web3_RpcRequest({
+      chain,
+      category: "blockchain",
+      method: "getTransactionsByAccount",
+      accountAddress: address,
+      limit,
+      offset,
+      NODIT_API_KEY: process.env.NODIT_API_KEY,
+    });
+
     return {
       chain,
       address,
-      transactions: [],
-      pagination: { limit, offset, total: 0 },
-      timestamp: new Date().toISOString()
+      transactions: response.result || response,
+      pagination: { limit, offset, total: response.total || 0 },
+      timestamp: new Date().toISOString(),
     };
-
   } catch (error) {
-    console.error('Error fetching transaction history:', error);
+    console.error("Error fetching transaction history:", error);
     throw new Error(`Failed to fetch transactions for ${address} on ${chain}`);
   }
 }
@@ -110,24 +122,27 @@ export async function executeMCPQuery(intent) {
     const { type, parameters } = intent;
 
     switch (type) {
-      case 'wallet_balance':
+      case "wallet_balance":
         return await getWalletBalance(parameters.chain, parameters.address);
-      
-      case 'token_balance':
+
+      case "token_balance":
         return await getTokenData(parameters.chain, parameters.address);
-      
-      case 'transaction_history':
-        return await getTransactionHistory(parameters.chain, parameters.address, parameters.options);
-      
-      case 'custom_query':
+
+      case "transaction_history":
+        return await getTransactionHistory(
+          parameters.chain,
+          parameters.address,
+          parameters.options
+        );
+
+      case "custom_query":
         return await executeCustomQuery(parameters);
-      
+
       default:
         throw new Error(`Unsupported intent type: ${type}`);
     }
-
   } catch (error) {
-    console.error('Error executing MCP query:', error);
+    console.error("Error executing MCP query:", error);
     throw error;
   }
 }
@@ -142,12 +157,12 @@ async function executeCustomQuery(parameters) {
     const { chain, category, method, params } = parameters;
 
     const response = await send_node_Request({
-      type: 'node',
+      type: "node",
       chain,
       category,
       method,
       params: params || [],
-      NODIT_API_KEY: process.env.NODIT_API_KEY
+      NODIT_API_KEY: process.env.NODIT_API_KEY,
     });
 
     return {
@@ -155,11 +170,10 @@ async function executeCustomQuery(parameters) {
       category,
       method,
       result: response.result || response,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-
   } catch (error) {
-    console.error('Error executing custom query:', error);
+    console.error("Error executing custom query:", error);
     throw error;
   }
 }
@@ -170,7 +184,11 @@ async function executeCustomQuery(parameters) {
  */
 function validateChain(chain) {
   if (!SUPPORTED_CHAINS.includes(chain)) {
-    throw new Error(`Unsupported chain: ${chain}. Supported chains: ${SUPPORTED_CHAINS.join(', ')}`);
+    throw new Error(
+      `Unsupported chain: ${chain}. Supported chains: ${SUPPORTED_CHAINS.join(
+        ", "
+      )}`
+    );
   }
 }
 
@@ -179,13 +197,13 @@ function validateChain(chain) {
  * @param {string} address - Wallet address
  */
 function validateAddress(address) {
-  if (!address || typeof address !== 'string') {
-    throw new Error('Invalid address provided');
+  if (!address || typeof address !== "string") {
+    throw new Error("Invalid address provided");
   }
-  
+
   // Basic Ethereum address validation
-  if (address.length !== 42 || !address.startsWith('0x')) {
-    throw new Error('Invalid Ethereum address format');
+  if (address.length !== 42 || !address.startsWith("0x")) {
+    throw new Error("Invalid Ethereum address format");
   }
 }
 
@@ -195,4 +213,4 @@ function validateAddress(address) {
  */
 export function getSupportedChains() {
   return SUPPORTED_CHAINS;
-} 
+}

@@ -1,14 +1,15 @@
-import express from 'express';
-import { processChatMessage } from '../services/chatService.js';
-import { validateChatMessage } from '../utils/validation.js';
+// routes/chat.js
+import express from "express";
+import { processChatMessage } from "../services/chatService.js";
+import { validateChatMessage } from "../utils/validation.js";
 
 const router = express.Router();
 
 /**
- * POST /api/chat/message
+ * POST /api/chat
  * Process a chat message and return AI response with potential chart data
  */
-router.post('/message', async (req, res, next) => {
+router.post("/", async (req, res, next) => {
   try {
     const { message, sessionId } = req.body;
 
@@ -23,9 +24,8 @@ router.post('/message', async (req, res, next) => {
 
     res.json({
       success: true,
-      data: response
+      data: response,
     });
-
   } catch (error) {
     next(error);
   }
@@ -35,20 +35,19 @@ router.post('/message', async (req, res, next) => {
  * GET /api/chat/history/:sessionId
  * Get chat history for a session
  */
-router.get('/history/:sessionId', async (req, res, next) => {
+router.get("/history/:sessionId", async (req, res, next) => {
   try {
     const { sessionId } = req.params;
-    
+
     // For now, return empty history
     // In a real app, you'd fetch from database
     res.json({
       success: true,
       data: {
         sessionId,
-        messages: []
-      }
+        messages: [],
+      },
     });
-
   } catch (error) {
     next(error);
   }
@@ -58,20 +57,19 @@ router.get('/history/:sessionId', async (req, res, next) => {
  * DELETE /api/chat/history/:sessionId
  * Clear chat history for a session
  */
-router.delete('/history/:sessionId', async (req, res, next) => {
+router.delete("/history/:sessionId", async (req, res, next) => {
   try {
     const { sessionId } = req.params;
-    
+
     // For now, just return success
     // In a real app, you'd delete from database
     res.json({
       success: true,
-      message: 'Chat history cleared'
+      message: "Chat history cleared",
     });
-
   } catch (error) {
     next(error);
   }
 });
 
-export { router as chatRouter }; 
+export { router as chatRouter };
