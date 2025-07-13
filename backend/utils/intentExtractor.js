@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import { GoogleGenAI } from '@google/genai';
 
 /**
  * Extract intent and parameters from natural language message
@@ -7,12 +7,10 @@ import OpenAI from 'openai';
  */
 export async function extractIntent(message) {
   try {
-    // Initialize OpenAI client with API key
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
-    });
+    // Initialize Google Generative AI client with API key
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-    const systemPrompt = `You are an intent extraction system for a blockchain data analysis platform. 
+    const systemPrompt = `You are an intent extraction system for a blockchain data analysis platform.
 
 Extract the user's intent and parameters from their natural language message. Return a JSON object with the following structure:
 
@@ -44,22 +42,18 @@ Examples:
 - "Graph the top tokens in this wallet 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6" → {"type": "token_balance", "parameters": {"chain": "ethereum", "address": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6"}, "requiresData": true, "chartType": "pie"}
 - "What is blockchain?" → {"type": "general_question", "parameters": {}, "requiresData": false, "chartType": null}
 
-Only return valid JSON.`;
+Your entire response must be only the raw JSON object. Do not wrap it in Markdown fences like \`\`\`json, and do not include any other text or explanations. The response must start with { and end with }.`;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: message }
-      ],
-      max_tokens: 300,
-      temperature: 0.1
+    const prompt = `${systemPrompt}\n\nUser message: ${message}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
     });
-
-    const response = completion.choices[0].message.content;
+    const responseText = response.text;
     
     // Parse the JSON response
-    const intent = JSON.parse(response);
+    const intent = JSON.parse(responseText);
     
     // Validate the extracted intent
     return validateIntent(intent);

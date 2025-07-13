@@ -56,8 +56,11 @@ export const useChatQuery = ({ onSuccess, onError }: UseChatQueryOptions) => {
       }
       
       // Real API call
-      const response = await axios.post(`${API_BASE_URL}/chat`, request);
-      return response.data;
+      const response = await axios.post(`${API_BASE_URL}/chat/message`, {
+        message: request.prompt,
+        sessionId: 'default-session' // TODO: Implement proper session management
+      });
+      return response.data.data; // Backend wraps response in data property
     },
     onSuccess: (data) => {
       console.log("API call successful:", data);

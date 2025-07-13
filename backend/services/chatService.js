@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import { GoogleGenAI } from '@google/genai';
 import { extractIntent } from '../utils/intentExtractor.js';
 import { executeMCPQuery } from './mcpService.js';
 import { generateChartData } from '../utils/chartGenerator.js';
@@ -13,6 +13,8 @@ export async function processChatMessage(message, sessionId) {
   try {
     // Step 1: Extract intent and parameters from the message
     const intent = await extractIntent(message);
+    // TODO: remove log
+    console.log('intent', intent);
     
     // Step 2: If intent requires blockchain data, fetch it via MCP
     let blockchainData = null;
@@ -44,7 +46,7 @@ export async function processChatMessage(message, sessionId) {
 }
 
 /**
- * Generate AI response using OpenAI
+ * Generate AI response using Google Gemini
  * @param {string} userMessage - Original user message
  * @param {Object} intent - Extracted intent
  * @param {Object} blockchainData - Blockchain data from MCP
@@ -52,10 +54,8 @@ export async function processChatMessage(message, sessionId) {
  */
 async function generateAIResponse(userMessage, intent, blockchainData) {
   try {
-    // Initialize OpenAI client with API key
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
-    });
+    // Initialize Google Generative AI client with API key
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
     const systemPrompt = `You are GraphDe, an AI assistant that helps users understand blockchain data through natural language queries. 
 
@@ -76,20 +76,15 @@ Current context:
 - Parameters: ${JSON.stringify(intent.parameters)}
 ${blockchainData ? `- Data available: ${JSON.stringify(blockchainData, null, 2)}` : ''}`;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userMessage }
-      ],
-      max_tokens: 500,
-      temperature: 0.7
+    const prompt = `${systemPrompt}\n\nUser message: ${userMessage}`;
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
     });
-
-    return completion.choices[0].message.content;
+    return response.text;
 
   } catch (error) {
-    console.error('OpenAI API error:', error);
+    console.error('Gemini API error:', error);
     return "I'm sorry, I'm having trouble processing your request right now. Please try again later.";
   }
 }
