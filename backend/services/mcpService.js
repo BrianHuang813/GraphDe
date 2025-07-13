@@ -11,6 +11,7 @@ const SUPPORTED_CHAINS = [
   "base",
   "kaia",
   "polygon",
+  "xrpl",
 ];
 
 /**
@@ -113,6 +114,91 @@ export async function getTransactionHistory(chain, address, options = {}) {
 }
 
 /**
+ * Get token allowance for a specific contract, owner, and spender
+ * @param {string} chain - Blockchain network
+ * @param {string} contractAddress - Token contract address
+ * @param {string} ownerAddress - Token owner address
+ * @param {string} spenderAddress - Token spender address
+ * @returns {Object} Token allowance data
+ */
+export async function getTokenAllowance(
+  chain,
+  contractAddress,
+  ownerAddress,
+  spenderAddress
+) {
+  try {
+    validateChain(chain);
+    validateAddress(contractAddress);
+    validateAddress(ownerAddress);
+    validateAddress(spenderAddress);
+
+    const response = await send_web3_RpcRequest({
+      chain,
+      category: "token",
+      method: "getTokenAllowance",
+      contractAddress,
+      ownerAddress,
+      spenderAddress,
+      NODIT_API_KEY: process.env.NODIT_API_KEY,
+    });
+
+    return {
+      chain,
+      contractAddress,
+      ownerAddress,
+      spenderAddress,
+      allowance: response.allowance || response.result || response,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error("Error fetching token allowance:", error);
+    throw new Error(
+      `Failed to fetch token allowance for contract ${contractAddress}`
+    );
+  }
+}
+
+/**
+ * Get token balance changes by account (XRPL specific)
+ * @param {string} chain - Blockchain network (must be 'xrpl')
+ * @param {Object} params - Query parameters
+ * @returns {Object} Token balance changes data
+ */
+export async function getTokenBalanceChangesByAccount(chain, params) {
+  try {
+    validateChain(chain);
+    validateXRPLAddress(params.accountAddress);
+
+    const response = await send_web3_RpcRequest({
+      chain,
+      category: "token",
+      method: "getTokenBalanceChangesByAccount",
+      ...params,
+      NODIT_API_KEY: process.env.NODIT_API_KEY,
+    });
+
+    return {
+      chain,
+      accountAddress: params.accountAddress,
+      data: response.items || response.result || response,
+      pagination: {
+        page: response.page,
+        rpp: response.rpp,
+        cursor: response.cursor,
+        count: response.count,
+      },
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error("Error fetching token balance changes:", error);
+    throw new Error(
+      `Failed to fetch token balance changes for account ${params.accountAddress}`
+    );
+  }
+}
+
+/**
  * Execute a custom MCP query based on extracted intent
  * @param {Object} intent - Extracted intent with parameters
  * @returns {Object} Query result
@@ -133,6 +219,20 @@ export async function executeMCPQuery(intent) {
           parameters.chain,
           parameters.address,
           parameters.options
+        );
+
+      case "token_allowance":
+        return await getTokenAllowance(
+          parameters.chain,
+          parameters.contractAddress,
+          parameters.ownerAddress,
+          parameters.spenderAddress
+        );
+
+      case "token_balance_changes":
+        return await getTokenBalanceChangesByAccount(
+          parameters.chain,
+          parameters
         );
 
       case "custom_query":
@@ -204,6 +304,21 @@ function validateAddress(address) {
   // Basic Ethereum address validation
   if (address.length !== 42 || !address.startsWith("0x")) {
     throw new Error("Invalid Ethereum address format");
+  }
+}
+
+/**
+ * Validate XRPL address format
+ * @param {string} address - XRPL address
+ */
+function validateXRPLAddress(address) {
+  if (!address || typeof address !== "string") {
+    throw new Error("Invalid XRPL address provided");
+  }
+
+  // XRPL address validation: 25-35 characters, starts with 'r'
+  if (address.length < 25 || address.length > 35 || !address.startsWith("r")) {
+    throw new Error("Invalid XRPL address format");
   }
 }
 
