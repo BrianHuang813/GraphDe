@@ -13,32 +13,28 @@ const mcp_nodeUrls = {
   polygon: 'https://polygon-mainnet.nodit.io/',
 };
 
-let reqId = 0;
+
 
 /**
  * Send a node-level JSON-RPC request to MCP.
  * 
  * @param {Object} options
- * @param {string} options.type - Must be 'node'
  * @param {string} options.chain - 'ethereum', 'arbitrum', etc.
- * @param {string} options.category - 'eth', 'net', 'web3', etc.
+ * @param {string} options.category - 'eth', 'net', 'web3', , 'debug'etc.
  * @param {string} options.method - method name like 'blockNumber'
  * @param {Array} options.params - array of parameters for the method
  * @returns {Promise<Object>} JSON-RPC response result
  */
-export async function send_node_Request({ type, chain, category, method, params, NODIT_API_KEY }) {
+export async function send_node_Request({ chain, category, method, params, NODIT_API_KEY }) {
   if (type !== 'node') {
     throw new Error(`Unsupported request type: ${type}`);
   }
 
   const rpcMethod = `${category}_${method}`;
   const url = mcp_nodeUrls[chain];
-  if (!url) {
-    throw new Error(`Unsupported chain: ${chain}`);
-  }
 
   const data = {
-    id: reqId++,
+    id: 1,
     jsonrpc: '2.0',
     method: rpcMethod,
     params: params || []

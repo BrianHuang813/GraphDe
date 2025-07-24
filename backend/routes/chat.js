@@ -3,24 +3,31 @@ import express from "express";
 import { processChatMessage } from "../services/chatService.js";
 import { validateChatMessage } from "../utils/validation.js";
 
-const router = express.Router();
 
 /**
  * POST /api/chat
- * Process a chat message and return AI response with potential chart data
+ * Process a chat message and return AI response and chart data in json format to the frontend
  */
 router.post("/", async (req, res, next) => {
   try {
-    const { message, sessionId } = req.body;
+    const { Inputmessage, sessionId } = req.body;
 
     // Validate input
-    const validation = validateChatMessage({ message, sessionId });
+    const validation = validateChatMessage({ Inputmessage, sessionId });
     if (!validation.isValid) {
       return res.status(400).json({ error: validation.errors });
     }
 
     // Process the chat message
-    const response = await processChatMessage(message, sessionId);
+    
+    // return 
+      // message: aiResponse,
+      // chartData,
+      // intent: intent.type,
+      // timestamp: new Date().toISOString(),
+      // sessionId
+    
+    const response = await processChatMessage( Inputmessage, sessionId );
 
     res.json({
       success: true,
