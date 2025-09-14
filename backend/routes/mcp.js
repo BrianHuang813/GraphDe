@@ -1,5 +1,6 @@
 import express from 'express';
-import { getWalletBalance, getTokenData, getTransactionHistory } from '../services/mcpService.js';
+// import { getWalletBalance, getTokenData, getTransactionHistory } from '../services/mcpService.js';
+import { executeMCPQuery } from '../services/mcpService.js';
 import { validateMCPRequest } from '../utils/validation.js';
 
 const router = express.Router();
